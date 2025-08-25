@@ -10,7 +10,7 @@ from .serializers import SendNotificationRequestSerializer, NotificationResultsS
 from .models import Client
 from .mediator_service import MediatorService
 from .send_services import SMSService, EmailSendService, TelegramService
-from .exceptions import NoNotificationMethodException
+from .exceptions import NoNotificationMethodException, SmsNotificationFailedException, TelegramNotificationFailedException, EmailNotificationFailedException
 
 
 class NotificationApiView(APIView):
@@ -36,7 +36,7 @@ class NotificationApiView(APIView):
             response_data = NotificationResultsSerializer(data=results.__dict__)
             response_data.is_valid()
             if not any([results.email, results.sms, results.telegram]):
-                return Response(data="Не удалось отправить уведомления", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(data="Не удалось отправить уведомления", status=status.HTTP_503_SERVICE_UNAVAILABLE)
             else:
                 return Response(data=response_data.validated_data, status=status.HTTP_200_OK)
             
@@ -58,7 +58,7 @@ class SendSmsNotificationView(APIView):
         service = SMSService(send_sms=send_sms)
         try:
             service(settings.SMS_SENDER, [client.phone], request_data.validated_data.get("text"))
-        except Exception:
+        except SmsNotificationFailedException:
             return Response(data="Произошла ошибка при отправке SMS", status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
         return Response(status=status.HTTP_200_OK)
@@ -74,10 +74,13 @@ class SendTelegramNotificationView(APIView):
         except Client.DoesNotExist:
             return Response(data=f"Клиента с id {request_data.validated_data.get('client_id')} не существует!", status=status.HTTP_404_NOT_FOUND)
         
+        if not client.telegram_id:
+            return Response(data="У клиента не указан user_id для отправки сообщений", status=status.HTTP_400_BAD_REQUEST)
+
         service = TelegramService(TeleBot(token=settings.TELEGRAM_BOT_TOKEN))
         try:
             service(client.telegram_id, request_data.validated_data.get("text"))
-        except Exception:
+        except TelegramNotificationFailedException:
             return Response(data="Произошла ошибка при отправке сообщения в Telegram", status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
         return Response(status=status.HTTP_200_OK)
@@ -93,10 +96,13 @@ class SendEmailNotificationView(APIView):
         except Client.DoesNotExist:
             return Response(data=f"Клиента с id {request_data.validated_data.get('client_id')} не существует!", status=status.HTTP_404_NOT_FOUND)
         
+        if not client.email:
+            return Response(data="У клиента не указан email для отправки сообщения", status=status.HTTP_400_BAD_REQUEST)
+
         service = EmailSendService(send_mail)
         try:
             service(client.email, request_data.validated_data.get("text"))
-        except Exception:
+        except EmailNotificationFailedException:
             return Response(data="Не удалось отправить уведомление по email", status=status.HTTP_503_SERVICE_UNAVAILABLE)
         
         return Response(status=status.HTTP_200_OK)

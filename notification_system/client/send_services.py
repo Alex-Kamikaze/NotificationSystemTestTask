@@ -1,5 +1,6 @@
 from typing import Protocol, List
 from django.conf import settings
+from .exceptions import SmsNotificationFailedException, EmailNotificationFailedException, TelegramNotificationFailedException
 
 class SendMail(Protocol):
     pass
@@ -21,7 +22,11 @@ class SMSService:
         self.__send_sms(sender=sender, text=text, receivers=receivers)
 
     def __send_sms(self, sender: str, receivers: List[str], text: str):
-        self.send_sms(text, sender, receivers, fail_silently=False)
+        try:
+            self.send_sms(text, sender, receivers, fail_silently=False)
+        except Exception as e:
+            print(e)
+            raise SmsNotificationFailedException()
 
 
 class TelegramService:
@@ -33,7 +38,10 @@ class TelegramService:
         self.__send_message(user_id, message)
 
     def __send_message(self, user_id: int, message: str):
-        self.bot.send_message(user_id, text=message)
+        try:
+            self.bot.send_message(user_id, text=message)
+        except Exception:
+            raise TelegramNotificationFailedException()
 
 
 class EmailSendService:
@@ -46,4 +54,8 @@ class EmailSendService:
         self.__send_email(receiver, text)
 
     def __send_email(self, receiver: str, text: str):
-        self.send_mail(subject="Тестовое уведомление", from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=[receiver], message=text, fail_silently=False)
+        try:
+            self.send_mail(subject="Тестовое уведомление", from_email=settings.DEFAULT_FROM_EMAIL, recipient_list=[receiver], message=text, fail_silently=False)
+        except Exception as e:
+            print(e)
+            raise EmailNotificationFailedException()

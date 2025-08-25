@@ -139,7 +139,8 @@ EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL")
 
 # Настройки отправки SMS
-SMS_BACKEND = 'sms.backends.console.SmsBackend'
+SMS_BACKEND = env.str("SMS_BACKEND")
+SMS_FILE_PATH = env.str("SMS_FILE_PATH")
 SMS_SENDER = env.str("SMS_SENDER")
 
 # Настройки отправки в Telegram

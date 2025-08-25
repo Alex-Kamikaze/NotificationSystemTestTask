@@ -42,9 +42,7 @@ class MediatorService:
 
     def send_email_notification(self, text: str):
         if not self.client.email:
-            raise NoEmailException(
-                message="У клиента не указан Email для отправки уведомления"
-            )
+            raise NoEmailException()
 
         try:
             self.email_service(self.client.email, text)
