@@ -10,5 +10,9 @@ dependencies = [
     "django-sms>=0.7.0",
     "djangorestframework>=3.16.1",
     "environs>=14.3.0",
+    "factory-boy>=3.3.3",
+    "pytelegrambotapi>=4.28.0",
     "pytest>=8.4.1",
+    "pytest-mock>=3.14.1",
+    "requests>=2.32.5",
 ]
