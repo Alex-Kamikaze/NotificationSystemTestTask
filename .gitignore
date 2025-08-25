@@ -14,3 +14,5 @@ wheels/
 
 # Тестовая БД
 db.sqlite3
+
+messages/
