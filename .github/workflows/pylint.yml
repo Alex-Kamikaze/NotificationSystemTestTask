@@ -26,4 +26,4 @@ jobs:
       run: uv sync # Устанавливает зависимости из pyproject.toml включая dev-группы
 
     - name: Run tests
-      run: uv run pytest  # Запуск тестов через uv
+      run: cd notification_system; uv run pytest  # Запуск тестов через uv
